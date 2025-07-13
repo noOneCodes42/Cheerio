@@ -1,7 +1,7 @@
 //  ContentView.swift
 //  Cheerio
 //
-//  Created by Neel Arora on 7/11/25. SUBMIT THIS ONE NOT THE OTHER ONE
+//  Created by Neel Arora on 7/11/25. 
 //
 
 import SwiftUI
