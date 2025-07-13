@@ -1,27 +1,41 @@
-# YouTube Highlight Processor 🎬✨
+# Sports Highlight Processor ⚽🏀🏈
 
 **Submission for United Hacks v5**
 
-An intelligent video processing service that automatically detects and creates highlight reels from YouTube sports videos using advanced audio analysis and machine learning. Built with FastAPI, WebSocket streaming, and powered by Google's YAMNet for audio classification.
+An intelligent video processing service specifically designed for **sports content** that automatically detects and creates highlight reels from YouTube sports videos using advanced audio analysis and machine learning. Built with FastAPI, WebSocket streaming, and powered by Google's YAMNet for audio classification to identify crowd reactions, cheering, and exciting moments in sports footage.
 
 ## 🌟 Features
 
-- **🎯 Smart Cheer Detection**: Uses Google's YAMNet neural network to identify crowd cheering, applause, and excitement moments
-- **⚡ Real-time Processing**: WebSocket-based streaming with live progress updates
-- **🎬 Professional Output**: Automatic crossfade transitions and optional watermarking
-- **🔄 Audio Synchronization**: Advanced FFT-based cross-correlation for perfect audio-video sync
-- **📱 RESTful API**: Easy integration with any frontend or mobile app
+- **🎯 Smart Sports Cheer Detection**: Uses Google's YAMNet neural network to identify crowd cheering, applause, and excitement moments specifically optimized for sports content
+- **⚡ Real-time Processing**: WebSocket-based streaming with live progress updates for sports video analysis
+- **🏆 Sports-Focused Pipeline**: Automatically filters for sports content (Category ID 17) for optimal crowd reaction detection
+- **🎬 Professional Output**: Automatic crossfade transitions and optional watermarking perfect for sports highlight reels
+- **🔄 Audio Synchronization**: Advanced FFT-based cross-correlation for perfect audio-video sync in sports broadcasts
+- **📱 RESTful API**: Easy integration for sports apps, fantasy platforms, or team management tools
 - **🛡️ Secure Downloads**: Token-based file delivery with automatic cleanup
-- **🎵 Fallback Detection**: Librosa-based energy analysis when YAMNet is unavailable
+- **🎵 Fallback Detection**: Librosa-based energy analysis when YAMNet is unavailable, tuned for sports audio patterns
+
+## 🏅 Sports-Focused Features
+
+### 🎯 **Optimized for Sports Content**
+- **Category Filtering**: Automatically targets YouTube Sports category (ID: 17) for best results
+- **Crowd Reaction Detection**: Specialized algorithms for detecting cheers, applause, and fan excitement
+- **Game Audio Recognition**: Identifies whistles, buzzers, and sport-specific sounds
+- **Commentary Analysis**: Detects broadcaster excitement and key call moments
+
+### 🏆 **Smart Sports Timing**
+- **30-Second Spacing**: Ensures highlights don't overlap, perfect for distinct plays
+- **Configurable Padding**: Add context before/after exciting moments (default: 12 seconds)
+- **Play-by-Play Awareness**: Understands natural breaks in sports action
 
 ## 🏗️ Architecture
 
 ```
 ├── api.py              # Legacy API endpoint (simple version)
 ├── main.py             # Main FastAPI app with WebSocket streaming
-├── streaming_main.py   # Core video processing logic
+├── streaming_main.py   # Core sports video processing logic
 └── test/
-    └── client.py       # Python test client with examples
+    └── client.py       # Python test client with sports examples
 ```
 
 ## 🚀 Quick Start
@@ -99,17 +113,18 @@ python test/client.py --test status
 python test/client.py --server your-domain.com --test simple --url "https://youtube.com/watch?v=..."
 ```
 
-## 🔧 Processing Pipeline
+## 🎬 Processing Pipeline
 
-1. **📥 Download**: Extract video and audio from YouTube using yt-dlp
-2. **🎵 Audio Analysis**: 
-   - **Primary**: YAMNet neural network for semantic audio classification
-   - **Fallback**: Librosa energy-based analysis with spectral features
-3. **🎯 Peak Detection**: Identify top excitement moments with smart spacing (30+ seconds apart)
-4. **🔄 Synchronization**: FFT-based cross-correlation for perfect audio-video alignment
-5. **✂️ Clip Extraction**: Create highlight clips with configurable padding and watermarks
-6. **🎬 Final Assembly**: Crossfade transitions between clips for professional output
-7. **📦 Delivery**: Secure token-based download with automatic cleanup
+1. **📥 Download**: Extract video and audio from YouTube sports content using yt-dlp
+2. **🏆 Sports Filtering**: Automatically focus on sports videos (Category ID 17) for optimal results
+3. **🎵 Audio Analysis**: 
+   - **Primary**: YAMNet neural network for semantic audio classification (crowd cheering, applause, excitement)
+   - **Fallback**: Librosa energy-based analysis with spectral features optimized for sports audio
+4. **🎯 Peak Detection**: Identify top excitement moments with smart spacing (30+ seconds apart) - perfect for game highlights
+5. **🔄 Synchronization**: FFT-based cross-correlation for perfect audio-video alignment in sports broadcasts
+6. **✂️ Clip Extraction**: Create highlight clips with configurable padding and watermarks ideal for sports content
+7. **🎬 Final Assembly**: Crossfade transitions between clips for professional sports highlight reels
+8. **📦 Delivery**: Secure token-based download with automatic cleanup
 
 ## ⚙️ Configuration Options
 
@@ -122,13 +137,14 @@ python test/client.py --server your-domain.com --test simple --url "https://yout
 }
 ```
 
-## 🎯 YAMNet Audio Classification
+## 🎯 YAMNet Sports Audio Classification
 
-The system uses Google's YAMNet model to detect:
-- **Cheering & Applause** - Crowd reactions and clapping
-- **Shouting & Excitement** - Vocal expressions of enthusiasm  
-- **Crowd Noise** - General audience engagement
-- **Speech Peaks** - Commentator excitement moments
+The system uses Google's YAMNet model specifically tuned for sports content to detect:
+- **Crowd Cheering & Applause** - Fan reactions to goals, touchdowns, great plays
+- **Excitement Peaks** - Moments of high energy and crowd engagement  
+- **Stadium Atmosphere** - Crowd noise, chants, and collective reactions
+- **Commentary Excitement** - Broadcaster enthusiasm during key moments
+- **Sports-Specific Sounds** - Whistles, buzzers, and game-related audio cues
 
 ## 🛡️ Security Features
 
@@ -191,11 +207,14 @@ gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker
 
 ## 🎯 Use Cases
 
-- **🏆 Sports Highlights**: Automatically extract crowd cheering moments from games
-- **🎤 Concert Clips**: Find audience reaction peaks in live performances  
-- **📺 Event Summaries**: Create excitement reels from conferences or presentations
-- **🎮 Gaming Montages**: Detect epic moments in gameplay videos
-- **📱 Social Media**: Generate shareable highlight clips automatically
+- **🏆 Game Highlights**: Automatically extract the most exciting moments from full game recordings
+- **⚽ Goal Compilations**: Create instant highlight reels from soccer, hockey, or basketball games
+- **🏈 Big Play Moments**: Capture touchdowns, interceptions, and game-changing plays
+- **🎾 Match Summaries**: Generate exciting point compilations from tennis, volleyball, or badminton
+- **🏀 Clutch Moments**: Extract buzzer-beaters, slam dunks, and crowd-pleasing plays
+- **📱 Social Media Sports Content**: Generate shareable sports clips for team accounts and fan pages
+- **📺 Sports Broadcasting**: Automated highlight packages for sports news and recap shows
+- **🎮 Sports Gaming Content**: Create reaction compilations from FIFA, NBA 2K, or other sports games
 
 ## 🤝 Contributing
 
@@ -241,4 +260,4 @@ Built for United Hacks v5 - See hackathon guidelines for usage terms.
 
 **Made with ❤️ for United Hacks v5**
 
-*Transform any YouTube sports video into an engaging highlight reel with the power of AI! 🚀*
+*Transform any sports video into an engaging highlight reel with the power of AI! Perfect for teams, fans, coaches, and sports content creators! 🏆⚽🏀*
