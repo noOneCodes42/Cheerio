@@ -12,6 +12,7 @@ struct YoutubeVideo: Codable, Identifiable {
     let title: String
     let description: String
     let thumbnailURL: String
+    let duration: Double? // duration in seconds
 }
 
 struct YoutubeSearchResponse: Codable {
@@ -21,6 +22,11 @@ struct YoutubeSearchResponse: Codable {
 struct YoutubeAPIItem: Codable {
     let id: YoutubeID
     let snippet: YoutubeSnippet
+    let contentDetails: YoutubeContentDetails?
+}
+
+struct YoutubeContentDetails: Codable {
+    let duration: String
 }
 
 struct YoutubeID: Codable {
@@ -59,17 +65,66 @@ struct YoutubeAPIHandler {
             throw URLError(.badServerResponse)
         }
         let decoded = try JSONDecoder().decode(YoutubeSearchResponse.self, from: data)
+        
+        func parseISO8601Duration(_ isoDuration: String) -> Double? {
+            // Example: "PT1H2M10S" -> seconds
+            var duration = 0.0
+            var value = ""
+            var lastChar: Character?
+            for char in isoDuration {
+                if char.isNumber {
+                    value.append(char)
+                } else {
+                    if let last = lastChar, !value.isEmpty {
+                        let doubleVal = Double(value) ?? 0
+                        switch last {
+                        case "H":
+                            duration += doubleVal * 3600
+                        case "M":
+                            duration += doubleVal * 60
+                        case "S":
+                            duration += doubleVal
+                        default:
+                            break
+                        }
+                        value = ""
+                    }
+                    lastChar = char
+                }
+            }
+            // Catch last value if string ends with number (unlikely for ISO8601 duration)
+            if let last = lastChar, !value.isEmpty {
+                let doubleVal = Double(value) ?? 0
+                switch last {
+                case "H":
+                    duration += doubleVal * 3600
+                case "M":
+                    duration += doubleVal * 60
+                case "S":
+                    duration += doubleVal
+                default:
+                    break
+                }
+            }
+            return duration > 0 ? duration : nil
+        }
+        
         return decoded.items.compactMap { item in
             guard let videoId = item.id.videoId else { return nil }
+            let duration: Double?
+            if let isoDuration = item.contentDetails?.duration {
+                duration = parseISO8601Duration(isoDuration)
+            } else {
+                duration = nil
+            }
             return YoutubeVideo(
                 id: videoId,
                 title: item.snippet.title,
                 description: item.snippet.description,
-                thumbnailURL: item.snippet.thumbnails.high.url
+                thumbnailURL: item.snippet.thumbnails.high.url,
+                duration: duration
             )
         }
     }
 }
 
-
-    

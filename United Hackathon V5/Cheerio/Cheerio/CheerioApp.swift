@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct CheerioApp: App {
+    @StateObject private var downloadManager = DownloadManager()
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(downloadManager)
         }
     }
 }

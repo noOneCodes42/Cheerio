@@ -1,4 +1,3 @@
-
 //  ContentView.swift
 //  Cheerio
 //
@@ -109,19 +108,7 @@ struct ContentView: View {
                             .foregroundStyle(.primary)
                             
                         case .download:
-                            VStack {
-                                Spacer()
-                                Image(systemName: "arrow.down.circle.fill")
-                                    .resizable()
-                                    .foregroundStyle(.gray)
-                                    .frame(width: 100, height: 100)
-                                    .padding(.trailing, 30)
-                                Text("Downloads")
-                                    .foregroundStyle(.primary)
-                                    .font(.title)
-                                    .padding(.trailing, 25)
-                                Spacer()
-                            }
+                            CheerioScreeniosView()
                         }
                     }
                 }
@@ -185,19 +172,7 @@ struct ContentView: View {
                             .foregroundStyle(.primary)
                             
                         case .download:
-                            VStack {
-                                Spacer()
-                                Image(systemName: "arrow.down.circle.fill")
-                                    .resizable()
-                                    .foregroundStyle(.gray)
-                                    .frame(width: 100, height: 100)
-                                    .padding(.trailing, 30)
-                                Text("Downloads")
-                                    .foregroundStyle(.primary)
-                                    .font(.title)
-                                    .padding(.trailing, 25)
-                                Spacer()
-                            }
+                            CheerioScreeniosView()
                         }
                     }
                     Divider()
@@ -309,19 +284,7 @@ struct ContentView: View {
                             .foregroundStyle(.primary)
                             
                         case .download:
-                            VStack {
-                                Spacer()
-                                Image(systemName: "arrow.down.circle.fill")
-                                    .resizable()
-                                    .foregroundStyle(.gray)
-                                    .frame(width: 100, height: 100)
-                                    .padding(.trailing, 30)
-                                Text("Downloads")
-                                    .foregroundStyle(.primary)
-                                    .font(.title)
-                                    .padding(.trailing, 25)
-                                Spacer()
-                            }
+                            CheerioScreeniosView()
                         }
                     }
                 }
