@@ -31,7 +31,6 @@ An intelligent video processing service specifically designed for **sports conte
 ## 🏗️ Architecture
 
 ```
-├── api.py              # Legacy API endpoint (simple version)
 ├── main.py             # Main FastAPI app with WebSocket streaming
 ├── streaming_main.py   # Core sports video processing logic
 └── test/
