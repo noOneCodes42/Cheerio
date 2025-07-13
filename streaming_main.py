@@ -208,8 +208,14 @@ class StreamingHighlightProcessor:
             # YAMNet produces predictions every 0.48 seconds (with some overlap)
             # Each frame represents ~0.96 seconds of audio
             frame_duration = 0.96  # seconds per YAMNet frame
-            times = np.arange(len(cheer_scores)) * frame_duration
+            # Get actual audio duration
+            actual_duration = librosa.get_duration(path=mp3_file)
+            raw_times = np.arange(len(cheer_scores)) * frame_duration
             
+            # Only keep times within actual duration  
+            valid_mask = raw_times < actual_duration
+            times = raw_times[valid_mask]
+            cheer_scores = cheer_scores[valid_mask]
             if progress_tracker:
                 progress_tracker.sync_update("Detecting peaks in cheer scores...", 0.70)
             
@@ -261,7 +267,7 @@ class StreamingHighlightProcessor:
             for idx, peak in enumerate(top_peaks):
                 center_time = times[peak]
                 start = max(center_time - highlight_length/2, 0)
-                end = min(center_time + highlight_length/2, times[-1])
+                end = min(center_time + highlight_length/2, actual_duration)
                 
                 score = cheer_scores[peak]
                 intervals.append({
@@ -375,7 +381,7 @@ class StreamingHighlightProcessor:
             progress_tracker.sync_update("Detecting peaks in cheer score...", 0.65)
 
         # Use 30 second minimum distance for consistency with YAMNet
-        min_distance_sec = 30.0  # Minimum 30 seconds between highlights
+        min_distance_sec = 60.0  # Minimum 30 seconds between highlights
         min_distance = int(min_distance_sec / hop_duration)
         peaks, _ = find_peaks(cheer_score, distance=min_distance)
         
@@ -760,290 +766,6 @@ class StreamingHighlightProcessor:
                 "Highlight reel completed! File ready for download." + 
                 (" (Watermark applied)" if has_watermark else ""), 
                 data={"output_path": final_output, "clip_count": len(clip_paths), "watermarked": has_watermark}
-            )
-
-        print("Deleting temporary highlight clips and temp files...")
-        for f in clip_paths + [temp_video_audio, temp_stretched_mp3, temp_synced_mp3, temp_merged_video]:
-            try:
-                if os.path.exists(f):
-                    os.remove(f)
-                    print(f"🗑️  Deleted {f}")
-            except Exception as e:
-                print(f"Warning: could not delete {f}: {e}")
-
-        try:
-            if len(os.listdir(output_dir)) == 0:
-                shutil.rmtree(output_dir)
-        except Exception:
-            pass
-
-        print("All temp files cleaned up!")
-        return final_output
-        """Create highlight reel with progress updates and live video streaming"""
-        
-        # Ensure tmp directory exists
-        os.makedirs("tmp", exist_ok=True)
-        
-        # Set video for streaming
-        if video_streamer:
-            video_streamer.set_video_path(video_path)
-            video_streamer.start_streaming()
-        
-        temp_video_audio = f"{uuid.uuid4().hex}_video_audio.wav"
-        temp_stretched_mp3 = f"{uuid.uuid4().hex}_stretched.mp3"
-        temp_synced_mp3 = f"{uuid.uuid4().hex}_stretched_synced.mp3"
-        temp_merged_video = f"{uuid.uuid4().hex}_synced_video.mp4"
-
-        os.makedirs(output_dir, exist_ok=True)
-
-        def get_duration(path):
-            cmd = [
-                'ffprobe', '-i', path, '-show_entries', 'format=duration',
-                '-v', 'quiet', '-of', 'csv=p=0'
-            ]
-            out = subprocess.check_output(cmd)
-            return float(out.strip())
-
-        if progress_tracker:
-            progress_tracker.sync_update("Analyzing video and audio durations...", 0.8)
-
-        video_dur = get_duration(video_path)
-        mp3_dur = get_duration(mp3_audio)
-        print(f"Video duration: {video_dur:.3f}s, MP3 duration: {mp3_dur:.3f}s")
-
-        if progress_tracker:
-            progress_tracker.sync_update(f"Video: {video_dur:.1f}s, Audio: {mp3_dur:.1f}s", 0.82)
-
-        # Stretch MP3 to match video duration
-        speed = video_dur / mp3_dur
-        print(f"Stretching MP3 by atempo={speed:.8f}")
-        
-        if progress_tracker:
-            progress_tracker.sync_update(f"Syncing audio (speed: {speed:.3f}x)...", 0.85)
-        
-        if 0.5 <= speed <= 2.0:
-            tempo_str = f"atempo={speed}"
-        else:
-            s1 = speed**0.5
-            s2 = speed / s1
-            tempo_str = f"atempo={s1},atempo={s2}"
-
-        cmd = [
-            "ffmpeg", "-y", "-i", mp3_audio, "-filter:a", tempo_str, temp_stretched_mp3
-        ]
-        subprocess.run(cmd, check=True)
-        print(f"Stretched MP3 saved as: {temp_stretched_mp3}")
-
-        if progress_tracker:
-            progress_tracker.sync_update("Extracting audio from video for sync...", 0.87)
-            
-        if not os.path.exists(temp_video_audio):
-            print("Extracting audio from video...")
-            cmd = [
-                "ffmpeg", "-y", "-i", video_path, "-ac", "1", "-ar", str(sr_target), temp_video_audio
-            ]
-            subprocess.run(cmd, check=True)
-            if progress_tracker:
-                progress_tracker.sync_update("Audio extraction complete", 0.875)
-        else:
-            print("Audio already extracted from video.")
-
-        # Cross-correlate to find offset
-        if progress_tracker:
-            progress_tracker.sync_update("Loading audio files for cross-correlation...", 0.88)
-            
-        print("Loading audio for cross-correlation sync...")
-        y1, sr1 = librosa.load(temp_stretched_mp3, sr=sr_target)
-        y2, sr2 = librosa.load(temp_video_audio, sr=sr_target)
-        
-        if progress_tracker:
-            progress_tracker.sync_update("Trimming audio samples for analysis...", 0.885)
-            
-        samples = int(sr_target * trim_secs)
-        y1 = y1[:samples]
-        y2 = y2[:samples]
-        min_len = min(len(y1), len(y2))
-        y1 = y1[:min_len]
-        y2 = y2[:min_len]
-        
-        if progress_tracker:
-            progress_tracker.sync_update("Computing FFT-based cross-correlation...", 0.89)
-            
-        print("Calculating FFT-based cross-correlation to find offset...")
-        corr = correlate(y1, y2, mode='full', method='fft')
-        lags = np.arange(-min_len + 1, min_len)
-        best_lag = lags[np.argmax(corr)]
-        offset_sec = best_lag / sr_target
-        print(f"\n>>> Detected offset: {offset_sec:.2f} seconds")
-
-        if progress_tracker:
-            progress_tracker.sync_update("Applying audio synchronization...", 0.91)
-
-        print("Syncing MP3 audio to video start...")
-        if abs(offset_sec) < 0.05:
-            synced_mp3_use = temp_stretched_mp3
-            print("No extra sync needed, audio is already aligned.")
-            if progress_tracker:
-                progress_tracker.sync_update("Audio already synchronized", 0.915)
-        else:
-            if offset_sec > 0:
-                offset_ms = int(offset_sec * 1000)
-                print(f"Delaying MP3 by {offset_ms} ms ...")
-                if progress_tracker:
-                    progress_tracker.sync_update(f"Adding {offset_ms}ms delay to audio...", 0.912)
-                cmd = [
-                    "ffmpeg", "-y", "-i", temp_stretched_mp3, "-af",
-                    f"adelay={offset_ms}|{offset_ms}", temp_synced_mp3
-                ]
-                subprocess.run(cmd, check=True)
-            elif offset_sec < 0:
-                abs_offset = abs(offset_sec)
-                print(f"Trimming {abs_offset:.2f} seconds from the start of MP3 ...")
-                if progress_tracker:
-                    progress_tracker.sync_update(f"Trimming {abs_offset:.2f}s from audio start...", 0.912)
-                cmd = [
-                    "ffmpeg", "-y", "-ss", str(abs_offset), "-i", temp_stretched_mp3,
-                    "-acodec", "copy", temp_synced_mp3
-                ]
-                subprocess.run(cmd, check=True)
-            synced_mp3_use = temp_synced_mp3
-
-        if progress_tracker:
-            progress_tracker.sync_update("Merging synchronized audio with video...", 0.92)
-
-        print("Merging video and fully synced MP3 (for highlight extraction)...")
-        cmd = [
-            "ffmpeg", "-y", "-i", video_path, "-i", synced_mp3_use,
-            "-map", "0:v:0", "-map", "1:a:0",
-            "-c:v", "copy", "-shortest", temp_merged_video
-        ]
-        subprocess.run(cmd, check=True)
-        print(f"Final synced video for highlight extraction: {temp_merged_video}")
-        
-        if progress_tracker:
-            progress_tracker.sync_update("Video merge complete, preparing to extract clips...", 0.925)
-
-        # Update video for streaming
-        if video_streamer:
-            video_streamer.set_video_path(temp_merged_video)
-
-        def frame_align(t, fps):
-            return round(t * fps) / fps
-
-        with open(intervals_json, "r") as f:
-            intervals = json.load(f)
-
-        if progress_tracker:
-            progress_tracker.sync_update(f"Extracting {len(intervals)} highlight clips...", 0.93)
-
-        clip_paths = []
-        video_duration = float(get_duration(video_path))
-        
-        for idx, seg in enumerate(intervals):
-            start = max(frame_align(seg["start"] - padding, fps), 0)
-            end = min(frame_align(seg["end"] + padding, fps), video_duration)
-            duration = end - start
-            if duration < min_clip_length:
-                if progress_tracker:
-                    progress_tracker.sync_update(f"Skipping clip {idx+1} (too short: {duration:.2f}s)", 0.93 + (idx / len(intervals)) * 0.04)
-                continue
-                
-            random_name = f"{uuid.uuid4().hex}.mp4"
-            outclip = os.path.join(output_dir, random_name)
-            
-            if progress_tracker:
-                progress_tracker.sync_update(f"Extracting clip {idx+1}/{len(intervals)}: {start:.1f}s-{end:.1f}s", 0.93 + (idx / len(intervals)) * 0.04)
-                
-            cmd = [
-                "ffmpeg", "-y", "-ss", str(start), "-i", temp_merged_video,
-                "-t", str(duration),
-                "-c:v", "libx264", "-preset", "fast",
-                "-c:a", "aac", "-strict", "-2",
-                outclip
-            ]
-            print(f"Extracting clip {idx+1}: {start:.3f}s to {end:.3f}s -> {outclip}")
-            subprocess.run(cmd, check=True)
-            clip_paths.append(outclip)
-
-        def get_clip_duration(path):
-            cmd = [
-                'ffprobe', '-i', path, '-show_entries', 'format=duration',
-                '-v', 'quiet', '-of', 'csv=p=0'
-            ]
-            out = subprocess.check_output(cmd)
-            return float(out.strip())
-
-        if progress_tracker:
-            progress_tracker.sync_update("Analyzing clip durations for crossfade...", 0.975)
-
-        clip_durations = [get_clip_duration(clip) for clip in clip_paths]
-
-        num_clips = len(clip_paths)
-        if num_clips < 2:
-            if progress_tracker:
-                progress_tracker.sync_update("Single clip detected, copying to output...", 0.98)
-            print("Not enough clips for crossfade. Copying single clip to output.")
-            subprocess.run(["cp", clip_paths[0], final_output])
-        else:
-            if progress_tracker:
-                progress_tracker.sync_update(f"Creating crossfade filter for {num_clips} clips...", 0.98)
-
-            input_cmds = []
-            for clip in clip_paths:
-                input_cmds += ["-i", clip]
-
-            if progress_tracker:
-                progress_tracker.sync_update("Building FFmpeg filter complex...", 0.985)
-
-            v_prev = "[0:v]"
-            a_prev = "[0:a]"
-            filter_parts = []
-            cum_duration = 0.0
-            for i in range(1, num_clips):
-                dur_prev = clip_durations[i-1]
-                offset = cum_duration + dur_prev - fade_duration * i
-                v_next = f"[{i}:v]"
-                a_next = f"[{i}:a]"
-                v_out = f"[v{i}]"
-                a_out = f"[a{i}]"
-                filter_parts.append(
-                    f"{v_prev}{v_next}xfade=transition=fade:duration={fade_duration}:offset={offset}{v_out};"
-                )
-                filter_parts.append(
-                    f"{a_prev}{a_next}acrossfade=d={fade_duration}:c1=tri:c2=tri{a_out};"
-                )
-                v_prev = v_out
-                a_prev = a_out
-                cum_duration += dur_prev
-
-            filter_complex = "".join(filter_parts)
-            if filter_complex.endswith(";"):
-                filter_complex = filter_complex[:-1]
-
-            if progress_tracker:
-                progress_tracker.sync_update("Rendering final crossfade video...", 0.99)
-
-            cmd = ["ffmpeg", "-y"] + input_cmds + [
-                "-filter_complex", filter_complex,
-                "-map", v_prev, "-map", a_prev,
-                "-c:v", "libx264", "-preset", "fast",
-                "-c:a", "aac", "-strict", "-2",
-                final_output
-            ]
-
-            print("Running FFmpeg for crossfade highlight reel...")
-            subprocess.run(cmd, check=True)
-
-        # Update final video for streaming
-        if video_streamer:
-            video_streamer.set_video_path(final_output)
-
-        print(f"\n🎉 Done! Your highlight reel (with fade transitions) is: {os.path.abspath(final_output)}")
-
-        if progress_tracker:
-            progress_tracker.sync_next_step(
-                "Highlight reel completed! File ready for download.", 
-                data={"output_path": final_output, "clip_count": len(clip_paths)}
             )
 
         print("Deleting temporary highlight clips and temp files...")

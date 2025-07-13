@@ -406,6 +406,7 @@ def youtube_search(body: SearchRequest):
         "q": body.q,
         "type": "video",
         "videoCategoryId": "17",
+        "videoDuration": "long",
         "maxResults": body.max_results
     }
     r = requests.get(YOUTUBE_API_URL, params=params)

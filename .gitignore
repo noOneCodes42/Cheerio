@@ -6,3 +6,5 @@ tmp
 *.mp4
 *.mp3
 *.json
+*.wav
+clips_*
