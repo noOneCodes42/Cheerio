@@ -47,4 +47,3 @@ struct SearchBar: View {
         self.onSearch = onSearch
     }
 }
-

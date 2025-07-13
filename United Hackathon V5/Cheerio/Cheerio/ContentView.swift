@@ -1,8 +1,8 @@
-//
+
 //  ContentView.swift
 //  Cheerio
 //
-//  Created by Neel Arora on 7/11/25.
+//  Created by Neel Arora on 7/11/25. SUBMIT THIS ONE NOT THE OTHER ONE
 //
 
 import SwiftUI
@@ -341,4 +341,3 @@ struct ContentView: View {
     ContentView()
         .preferredColorScheme(.dark)
 }
-

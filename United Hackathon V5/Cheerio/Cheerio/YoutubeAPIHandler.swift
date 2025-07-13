@@ -43,7 +43,7 @@ struct YoutubeThumbnail: Codable {
 
 struct YoutubeAPIHandler {
     static func searchYoutube(query: String, maxResults: Int) async throws -> [YoutubeVideo] {
-        guard let url = URL(string: "https://youtubeapi.thetechtitans.vip/youtube_search") else {
+        guard let url = URL(string: "https://thetechtitans.vip/youtube_search") else {
             throw URLError(.badURL)
         }
         var request = URLRequest(url: url)
@@ -70,3 +70,6 @@ struct YoutubeAPIHandler {
         }
     }
 }
+
+
+    

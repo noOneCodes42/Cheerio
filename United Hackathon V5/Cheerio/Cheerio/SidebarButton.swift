@@ -32,3 +32,5 @@ struct SidebarButton: View {
         .buttonStyle(.plain)
     }
 }
+
+
