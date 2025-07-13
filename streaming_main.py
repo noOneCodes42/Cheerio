@@ -131,7 +131,7 @@ class StreamingHighlightProcessor:
         return video_file, audio_file
 
     def detect_cheers_yamnet(self, mp3_file, progress_tracker=None, output_json='top_cheer_intervals.json', 
-                            top_n=10, highlight_length=2.0, plot=False):
+                            top_n=40, highlight_length=2.0, plot=False):
         """Detect cheering moments using YAMNet (Google's audio classification model)"""
         
         if not YAMNET_AVAILABLE:
@@ -215,7 +215,7 @@ class StreamingHighlightProcessor:
             
             # Find peaks in cheer scores
             # Minimum distance between peaks (in frames) - 30 seconds apart
-            min_distance_sec = 30.0  # Minimum 30 seconds between highlights
+            min_distance_sec = 60.0  # Minimum 30 seconds between highlights
             min_distance_frames = int(min_distance_sec / frame_duration)
             
             # Use adaptive threshold
@@ -333,7 +333,7 @@ class StreamingHighlightProcessor:
                                             highlight_length=highlight_length, plot=plot)
 
     def detect_cheers_librosa(self, mp3_file, progress_tracker=None, output_json='top_cheer_intervals.json', 
-                             top_n=10, frame_duration=0.5, hop_duration=0.1, highlight_length=2.0, plot=False):
+                             top_n=40, frame_duration=0.5, hop_duration=0.1, highlight_length=2.0, plot=False):
         """Original librosa-based cheer detection (fallback method)"""
         
         if progress_tracker:
@@ -453,7 +453,7 @@ class StreamingHighlightProcessor:
         return intervals
 
     def detect_cheers(self, mp3_file, progress_tracker=None, output_json='top_cheer_intervals.json', 
-                     top_n=10, frame_duration=0.5, hop_duration=0.1, highlight_length=2.0, plot=False):
+                     top_n=40, frame_duration=0.5, hop_duration=0.1, highlight_length=2.0, plot=False):
         """Detect cheering moments - tries YAMNet first, falls back to librosa"""
         
         if YAMNET_AVAILABLE:

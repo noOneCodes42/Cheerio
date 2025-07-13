@@ -1,0 +1,31 @@
+# requirements-dev.txt
+# Development environment with testing and debugging tools
+
+# Include all main requirements
+-r requirements.txt
+
+# Testing Framework
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.0.0
+
+# Code Quality
+black>=22.0.0
+flake8>=5.0.0
+isort>=5.10.0
+
+# Documentation
+sphinx>=5.0.0
+sphinx-rtd-theme>=1.0.0
+
+# Debugging and Profiling
+ipython>=8.0.0
+jupyter>=1.0.0
+memory-profiler>=0.60.0
+
+# Type Checking
+mypy>=0.991
+
+# Additional Development Tools
+pre-commit>=2.20.0
+bandit>=1.7.0

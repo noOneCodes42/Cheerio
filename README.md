@@ -187,7 +187,7 @@ The system uses Google's YAMNet model specifically tuned for sports content to d
 ### Local Development
 ```bash
 # Install development dependencies
-pip install -r requirements.txt
+pip install -r requirements-*.txt
 
 # Run with auto-reload
 uvicorn main:app --reload --port 8000

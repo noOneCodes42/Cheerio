@@ -1,0 +1,31 @@
+# requirements-gpu.txt
+# For systems with NVIDIA GPU support
+
+# Core Audio/Video Processing
+librosa>=0.10.0,<0.11.0
+opencv-python>=4.5.0,<5.0.0
+numpy>=1.21.0,<1.25.0
+scipy>=1.7.0,<1.12.0
+matplotlib>=3.5.0,<4.0.0
+
+# YouTube Download
+yt-dlp>=2023.1.6
+
+# Machine Learning with GPU Support
+tensorflow-gpu>=2.10.0,<2.14.0
+tensorflow-hub>=0.12.0,<0.15.0
+
+# Audio Format Support
+soundfile>=0.10.0
+audioread>=2.1.9
+pydub>=0.25.1
+
+# Performance Enhancements
+numba>=0.56.0
+tqdm>=4.64.0
+
+# WebSocket Support
+websockets>=10.0
+
+# FFmpeg Python Wrapper
+ffmpeg-python>=0.2.0
